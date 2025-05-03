@@ -170,11 +170,12 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "file:./sqlite.db"
+        "value": null
       }
     }
   },
