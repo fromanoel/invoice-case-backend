@@ -39,6 +39,6 @@ model Interaction{
   document Document @relation(fields: [documentId], references: [id])
   documentId String
   question String
-  answer String
+  answer String?
   createdAt DateTime @default(now())
 }
