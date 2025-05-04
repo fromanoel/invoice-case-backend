@@ -12,17 +12,30 @@ export class AuthService {
     constructor(private readonly userService: UserService, private readonly jwtService : JwtService) {}
 
 
-    login(user: User) : UserToken {
-        //Transforma USER em JWT
+    login(user: User): { access_token: string; refresh_token: string } {
         const payload: UserPayload = {
             sub: Number(user.id),
             username: user.username,
             name: user.name
         };
-
-        const jwtToken = this.jwtService.sign(payload);
-
-        return { access_token : jwtToken}
+    
+        const accessToken = this.jwtService.sign(payload, {
+            secret: 'ACCESS_TOKEN_SECRET', // ideal: usar via .env
+            expiresIn: '15m',
+        });
+    
+        const refreshToken = this.jwtService.sign(
+            { sub: user.id, username: user.username },
+            {
+                secret: 'REFRESH_TOKEN_SECRET',
+                expiresIn: '7d',
+            },
+        );
+    
+        return {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+        };
     }
   
    async validateUser(username: string, password: string) {

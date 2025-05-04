@@ -3,15 +3,21 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
+import { AuthService } from 'src/auth/auth.service'; // Importar o AuthService
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-  
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService, // Injetar o AuthService
+  ) {}
+
   @IsPublic()
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const user = await this.userService.create(createUserDto); // Criar o usuário
+    const token = await this.authService.login(user); // Gerar o token JWT
+    return { user, token }; // Retornar o usuário e o token
   }
 
   @Get()
@@ -20,7 +26,7 @@ export class UserController {
   }
 
   @Get(':username')
-  findOne(@Param('username') username : string) {
+  findOne(@Param('username') username: string) {
     return this.userService.findOne(username);
   }
 
