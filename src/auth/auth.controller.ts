@@ -2,7 +2,7 @@ import { Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/commo
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
