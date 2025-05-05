@@ -25,6 +25,7 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @IsPublic()
   @Get(':username')
   findOne(@Param('username') username: string) {
     return this.userService.findOne(username);

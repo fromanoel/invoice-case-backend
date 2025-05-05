@@ -28,9 +28,28 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  findOne(username: string) {
+  async findOneWithPassword(username: string) {
     return this.prisma.user.findUnique({
-      where : {username}
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        password: true, // Inclui o password para validação
+        createdAt: true,
+      },
+    });
+  }
+
+  async findOne(username: string) {
+    return this.prisma.user.findUnique({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        createdAt: true,
+      },
     });
   }
 
