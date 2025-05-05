@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Response} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Response, UseGuards, Request} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -28,15 +28,14 @@ export class UserController {
     return res.send({ message: 'User created and logged in successfully' });
   }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
+  // @Get(':username')
+  // findOne(@Param('username') username: string) {
+  //   return this.userService.findOne(username);
+  // }
 
-  @IsPublic()
-  @Get(':username')
-  findOne(@Param('username') username: string) {
-    return this.userService.findOne(username);
+  @Get('me')
+  getUserName(@Request() req: any) {
+    return req.user.name;
   }
 
   @Patch(':id')

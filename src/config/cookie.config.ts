@@ -5,6 +5,7 @@ export const cookieConfig = {
       sameSite: 'None',
       maxAge: 15 * 60 * 1000, //15 minutos
       domain: 'localhost', 
+      path: "/",
     },
     refreshToken: {
       httpOnly: true,
@@ -12,5 +13,6 @@ export const cookieConfig = {
       sameSite: 'None',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
       domain: 'localhost',
+      path: "/",
     },
   };

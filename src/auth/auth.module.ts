@@ -10,7 +10,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
   imports: [
-    forwardRef(() => UserModule), // Usar forwardRef para evitar dependência circular
+    forwardRef(() => UserModule), 
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1h' },

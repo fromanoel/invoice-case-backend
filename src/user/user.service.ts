@@ -10,7 +10,6 @@ export class UserService {
 
   
   async create(createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     const data = {
       ...createUserDto,
       password : await bcrypt.hash(createUserDto.password, 10)
@@ -20,8 +19,6 @@ export class UserService {
     return { ...createdUser, password: undefined
   };
 }
-
-
 
 
   findAll() {
