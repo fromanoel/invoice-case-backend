@@ -14,10 +14,11 @@ import { IsPublic } from './decorators/is-public.decorator';
 import { UnauthorizedError } from 'src/errors/unauthorized.error';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService, private readonly jwtService: JwtService, private readonly userService : UserService) {}
+  constructor(private readonly authService: AuthService, private readonly jwtService: JwtService, private readonly userService : UserService, private readonly prisma : PrismaService) {}
 
   @IsPublic()
   @Post('login')
@@ -28,33 +29,36 @@ export class AuthController {
   }
 
   @Post('refresh')
-  async refreshToken(@Body() body: { refresh_token: string }) {
-    try {
-      const payload = this.jwtService.verify(body.refresh_token, {
-        secret: 'REFRESH_TOKEN_SECRET',
-      });
-
-      const user = await this.userService.findOne(payload.username);
-
-      if (!user) {
-        throw new UnauthorizedError('User not found');
-      }
-
-      const newAccessToken = this.jwtService.sign(
-        {
-          sub: user.id,
-          username: user.username,
-          name: user.name,
-        },
-        {
-          secret: 'ACCESS_TOKEN_SECRET',
-          expiresIn: '15m',
-        },
-      );
-
-      return { access_token: newAccessToken };
-    } catch (e) {
+  async refresh(@Body() body: { refresh_token: string }) {
+    const tokenInDb = await this.prisma.refreshToken.findUnique({
+      where: { token: body.refresh_token },
+      include: { user: true },
+    });
+  
+    if (!tokenInDb) {
       throw new UnauthorizedError('Invalid refresh token');
     }
+  
+    try {
+      this.jwtService.verify(body.refresh_token, {
+        secret: process.env.REFRESH_TOKEN_SECRET,
+      });
+    } catch (e) {
+      // opcional: remover o token expirado do banco
+      await this.prisma.refreshToken.delete({ where: { token: body.refresh_token } });
+      throw new UnauthorizedError('Refresh token expired or invalid');
+    }
+  
+    const newAccessToken = this.jwtService.sign({
+      sub: tokenInDb.user.id,
+      username: tokenInDb.user.username,
+      name: tokenInDb.user.name,
+    }, {
+      secret: process.env.ACCESS_TOKEN_SECRET,
+      expiresIn: '15m',
+    });
+  
+    return { access_token: newAccessToken };
   }
+  
 }

@@ -20,6 +20,7 @@ model User{
   password String
   documents Document[]
   createdAt DateTime @default(now())
+  refreshTokens RefreshToken[]
 }
 
 model Document{
@@ -41,4 +42,13 @@ model Interaction{
   question String
   answer String?
   createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
 }
