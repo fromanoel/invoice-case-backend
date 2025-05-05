@@ -1,23 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Response} from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IsPublic } from 'src/auth/decorators/is-public.decorator';
-import { AuthService } from 'src/auth/auth.service'; // Importar o AuthService
-
+import { AuthService } from 'src/auth/auth.service'; 
+import { cookieConfig } from 'src/config/cookie.config';
 @Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly authService: AuthService, // Injetar o AuthService
+    private readonly authService: AuthService, 
   ) {}
 
   @IsPublic()
   @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    const user = await this.userService.create(createUserDto); // Criar o usuário
-    const token = await this.authService.login(user); // Gerar o token JWT
-    return { user, token }; // Retornar o usuário e o token
+  async create(@Body() createUserDto: CreateUserDto, @Response() res: any) {
+    // Criar o usuário
+    const user = await this.userService.create(createUserDto);
+  
+    // Logar o usuário automaticamente após a criação
+    const { access_token, refresh_token } = await this.authService.login(user);
+  
+    res.cookie('access_token', access_token, cookieConfig.accessToken);
+    res.cookie('refresh_token', refresh_token, cookieConfig.refreshToken);
+  
+    // Retornar uma mensagem de sucesso 
+    return res.send({ message: 'User created and logged in successfully' });
   }
 
   @Get()

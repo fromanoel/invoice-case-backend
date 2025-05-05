@@ -15,41 +15,78 @@ export class AuthService {
 
 
     async login(user: User): Promise<{ access_token: string; refresh_token: string }> {
-        const payload = {
-          sub: user.id,
-          username: user.username,
-          name: user.name,
-        };
-      
-        const accessToken = this.jwtService.sign(payload, {
+      const payload = {
+        sub: user.id,
+        username: user.username,
+        name: user.name,
+      };
+    
+      const accessToken = this.jwtService.sign(payload, {
+        secret: process.env.ACCESS_TOKEN_SECRET,
+        expiresIn: '15m',
+      });
+    
+      const refreshToken = this.jwtService.sign(
+        { sub: user.id, username: user.username },
+        {
+          secret: process.env.REFRESH_TOKEN_SECRET,
+          expiresIn: '7d',
+        },
+      );
+    
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+    
+      // Remover tokens antigos do usuário
+      await this.prisma.refreshToken.deleteMany({
+        where: { userId: user.id },
+      });
+    
+      // Salvar o novo refresh token
+      await this.prisma.refreshToken.create({
+        data: {
+          token: refreshToken,
+          userId: user.id,
+          expiresAt,
+        },
+      });
+    
+      return {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      };
+    }
+
+    // Função para gerar um novo access_token usando o refresh_token
+  async refreshAccessToken(refreshToken: string): Promise<{ access_token: string }> {
+    try {
+      // Validar o refresh token
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.REFRESH_TOKEN_SECRET,
+      });
+
+      const refreshTokenRecord = await this.prisma.refreshToken.findUnique({
+        where: { token: refreshToken },
+      });
+
+      if (!refreshTokenRecord || new Date() > refreshTokenRecord.expiresAt) {
+        throw new Error('Refresh token expired');
+      }
+
+      // Gerar um novo access token
+      const newAccessToken = this.jwtService.sign(
+        { sub: payload.sub, username: payload.username },
+        {
           secret: process.env.ACCESS_TOKEN_SECRET,
           expiresIn: '15m',
-        });
-      
-        const refreshToken = this.jwtService.sign(
-          { sub: user.id, username: user.username },
-          {
-            secret: process.env.REFRESH_TOKEN_SECRET,
-            expiresIn: '7d',
-          },
-        );
-      
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-      
-        await this.prisma.refreshToken.create({
-          data: {
-            token: refreshToken,
-            userId: user.id,
-            expiresAt,
-          },
-        });
-      
-        return {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        };
-      }
+        },
+      );
+
+      return { access_token: newAccessToken };
+    } catch (error) {
+      throw new Error('Invalid refresh token');
+    }
+  }
       
    async validateUser(username: string, password: string) {
         const user = await this.userService.findOneWithPassword(username);

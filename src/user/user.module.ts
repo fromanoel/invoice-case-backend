@@ -7,7 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [
     PrismaModule,
-    forwardRef(() => AuthModule), // Usar forwardRef para evitar dependência circular
+    forwardRef(() => AuthModule), 
   ],
   controllers: [UserController],
   providers: [UserService],
