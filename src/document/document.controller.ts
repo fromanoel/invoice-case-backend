@@ -14,7 +14,6 @@ import { DocumentService } from './document.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createWorker } from 'tesseract.js';
 import { diskStorage } from 'multer';
 
 @Controller('document')
@@ -44,8 +43,7 @@ export class DocumentController {
       throw new Error('Arquivo não enviado corretamente.');
     }
 
-    const text = await this.extractText(file.path);
-    console.log('Texto extraído:', text);
+    const text = await this.documentService.extractText(file.path);
     const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
     const finalPath = path.join(uploadsDir, file.filename);
 
@@ -54,38 +52,20 @@ export class DocumentController {
     }
 
     fs.renameSync(file.path, finalPath);
-    this.documentService.saveDocument(finalPath, file.originalname, req, text);
+    const invoice = await this.documentService.saveDocument(finalPath, file.originalname, req, text);
     return {
+      id: invoice.id,
       extractedText: text,
       imagePath: `/uploads/images/${file.filename}`,
     };
   }
 
-  async extractText(imagePath: string): Promise<string> {
-    const worker = await createWorker('por', 1, {
-      logger: (m) => console.log(m),
-    });
-
-    try {
-      const {
-        data: { text },
-      } = await worker.recognize(imagePath);
-      console.log('Texto extraído:', text);
-      return text;
-    } catch (error) {
-      console.error('Erro ao extrair texto:', error);
-      throw error;
-    } finally {
-      await worker.terminate();
-    }
-  }
 
   @Get()
   async findAllDocumentsByUserId(@Req() req: any) {
     const userId = req.user.id;
     const documents =
       await this.documentService.findAllDocumentsByUserId(userId);
-    console.log(documents);
     return documents;
   }
 
@@ -96,7 +76,6 @@ export class DocumentController {
       userId,
       id,
     );
-    console.log(document);
     return document;
   }
 }

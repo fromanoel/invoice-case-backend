@@ -3,6 +3,7 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
+import { createWorker } from 'tesseract.js';
 import * as path from 'path';
 
 @Injectable()
@@ -23,11 +24,7 @@ export class DocumentService {
     const relativePath = fullPath.split(path.sep + 'uploads')[1];
     const filePath = path.join('uploads', relativePath).replace(/\\/g, '/'); // Padroniza para barras normais
 
-    console.log(filePath); // Exemplo: uploads/images/exemplo-1746501139529-881312360.jpg
-    console.log(originalName);
-    console.log(userId);
-
-    await this.prisma.document.create({
+    return await this.prisma.document.create({
       data: {
         userId,
         originalName,
@@ -36,6 +33,23 @@ export class DocumentService {
       },
     });
   }
+
+    async extractText(imagePath: string): Promise<string> {
+      const worker = await createWorker('por', 1, {
+        logger: (m) => console.log(m),
+      });
+  
+      try {
+        const {
+          data: { text },
+        } = await worker.recognize(imagePath);
+        return text;
+      } catch (error) {
+        throw error;
+      } finally {
+        await worker.terminate();
+      }
+    }
 
   findAllDocumentsByUserId(userId: string) {
     return this.prisma.document.findMany({
