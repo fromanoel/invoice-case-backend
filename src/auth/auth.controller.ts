@@ -126,7 +126,7 @@ async logout(@Request() req: any, @Response() res: any) {
       },
       {
         secret: process.env.JWT_SECRET,
-        expiresIn: '15s',
+        expiresIn: '15m',
       },
     );
 
