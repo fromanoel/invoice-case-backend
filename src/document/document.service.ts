@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
-
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Request } from 'express';
 @Injectable()
 export class DocumentService {
-  create(createDocumentDto: CreateDocumentDto) {
-    return 'This action adds a new document';
+  constructor(private prisma: PrismaService) {}
+
+  async saveFilePath(filePath: string, originalName: string) {
+    console.log(`Salvando no banco: ${filePath} (${originalName})`);
   }
 
   findAll() {
