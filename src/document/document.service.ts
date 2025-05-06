@@ -3,6 +3,8 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
+import * as path from 'path';
+
 @Injectable()
 export class DocumentService {
   constructor(
@@ -17,9 +19,11 @@ export class DocumentService {
     extractedText: string,
   ) {
     const userId = req.user.id;
-    const relativePath = fullPath.split('\\uploads')[1];
-    const filePath = `\\uploads${relativePath}`; //
-    console.log(filePath);
+    // Extrair o caminho relativo e padronizar as barras
+    const relativePath = fullPath.split(path.sep + 'uploads')[1];
+    const filePath = path.join('uploads', relativePath).replace(/\\/g, '/'); // Padroniza para barras normais
+
+    console.log(filePath); // Exemplo: uploads/images/exemplo-1746501139529-881312360.jpg
     console.log(originalName);
     console.log(userId);
 
@@ -28,12 +32,12 @@ export class DocumentService {
         userId,
         originalName,
         filePath,
-        extractedText
-      }
-    })
+        extractedText,
+      },
+    });
   }
 
-  findAllDocumentsByUserId(userId: string){
+  findAllDocumentsByUserId(userId: string) {
     return this.prisma.document.findMany({
       where: {
         userId: userId,
@@ -49,19 +53,31 @@ export class DocumentService {
     });
   }
 
-  findAll() {
-    return `This action returns all document`;
+  async findDocumentWithInteractions(userId: string, documentId: string) {
+    return this.prisma.document.findFirst({
+      where: {
+        id: documentId,
+        userId: userId, // Filtra pelo userId no modelo Document
+      },
+      include: {
+        interactions: true, // Inclui todas as interações relacionadas ao documento
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} document`;
-  }
+  // findAll() {
+  //   return `This action returns all document`;
+  // }
 
-  update(id: number, updateDocumentDto: UpdateDocumentDto) {
-    return `This action updates a #${id} document`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} document`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} document`;
-  }
+  // update(id: number, updateDocumentDto: UpdateDocumentDto) {
+  //   return `This action updates a #${id} document`;
+  // }
+
+  // remove(id: number) {
+  //   return `This action removes a #${id} document`;
+  // }
 }

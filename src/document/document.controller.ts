@@ -22,31 +22,37 @@ export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
 
   @Post('upload-image')
-  @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/tmp',
-      filename: (req, file, callback) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        const name = path.basename(file.originalname, ext);
-        callback(null, `${name}-${uniqueSuffix}${ext}`);
-      },
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/tmp',
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = path.extname(file.originalname);
+          const name = path.basename(file.originalname, ext);
+          callback(null, `${name}-${uniqueSuffix}${ext}`);
+        },
+      }),
     }),
-  }))
-  async handleImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  )
+  async handleImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
     if (!file || !file.path) {
       throw new Error('Arquivo não enviado corretamente.');
     }
-  
+
     const text = await this.extractText(file.path);
     console.log('Texto extraído:', text);
     const uploadsDir = path.join(process.cwd(), 'uploads', 'images');
     const finalPath = path.join(uploadsDir, file.filename);
-  
+
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
-  
+
     fs.renameSync(file.path, finalPath);
     this.documentService.saveDocument(finalPath, file.originalname, req, text);
     return {
@@ -55,14 +61,15 @@ export class DocumentController {
     };
   }
 
-  async extractText(imagePath: string): Promise<string>{
+  async extractText(imagePath: string): Promise<string> {
     const worker = await createWorker('por', 1, {
-      logger: m => console.log(m), 
+      logger: (m) => console.log(m),
     });
-    
+
     try {
-  
-      const { data: { text } } = await worker.recognize(imagePath);
+      const {
+        data: { text },
+      } = await worker.recognize(imagePath);
       console.log('Texto extraído:', text);
       return text;
     } catch (error) {
@@ -71,15 +78,27 @@ export class DocumentController {
     } finally {
       await worker.terminate();
     }
-}
+  }
 
-@Get()
-async findAllDocumentsByUserId(@Req() req: any) {
-  const userId = req.user.id; 
-  const documents = await this.documentService.findAllDocumentsByUserId(userId);
-  console.log(documents);
-  return documents;
-}
+  @Get()
+  async findAllDocumentsByUserId(@Req() req: any) {
+    const userId = req.user.id;
+    const documents =
+      await this.documentService.findAllDocumentsByUserId(userId);
+    console.log(documents);
+    return documents;
+  }
+
+  @Get(':id/interaction')
+  async findDocumentWithInteractions(@Req() req: any, @Param('id') id: string) {
+    const userId = req.user.id;
+    const document = await this.documentService.findDocumentWithInteractions(
+      userId,
+      id,
+    );
+    console.log(document);
+    return document;
+  }
 }
 // @Get()
 // findAll() {

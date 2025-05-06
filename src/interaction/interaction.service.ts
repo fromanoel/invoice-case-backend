@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateInteractionDto } from './dto/create-interaction.dto';
-import { UpdateInteractionDto } from './dto/update-interaction.dto';
 import OpenAI from 'openai';
-import fs from 'fs/promises';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -52,6 +50,7 @@ export class InteractionService {
 
     return interaction;
   }
+
   }
 
 
