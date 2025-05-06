@@ -8,6 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { DocumentService } from './document.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -19,8 +20,6 @@ import { diskStorage } from 'multer';
 @Controller('document')
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
-
-  private extractedText = '';
 
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('file', {
@@ -34,7 +33,7 @@ export class DocumentController {
       },
     }),
   }))
-  async handleImage(@UploadedFile() file: Express.Multer.File) {
+  async handleImage(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file || !file.path) {
       throw new Error('Arquivo não enviado corretamente.');
     }
@@ -49,7 +48,7 @@ export class DocumentController {
     }
   
     fs.renameSync(file.path, finalPath);
-  
+    this.documentService.saveDocument(finalPath, file.originalname, req, text);
     return {
       extractedText: text,
       imagePath: `/uploads/images/${file.filename}`,
@@ -74,6 +73,13 @@ export class DocumentController {
     }
 }
 
+@Get()
+async findAllDocumentsByUserId(@Req() req: any) {
+  const userId = req.user.id; 
+  const documents = await this.documentService.findAllDocumentsByUserId(userId);
+  console.log(documents);
+  return documents;
+}
 }
 // @Get()
 // findAll() {

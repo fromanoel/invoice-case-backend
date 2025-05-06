@@ -34,8 +34,8 @@ export class UserController {
   // }
 
   @Get('me')
-  getUserName(@Request() req: any) {
-    return req.user.name;
+  getUser(@Request() req: any) {
+    return this.userService.getUser(req.user);
   }
 
   @Patch(':id')
