@@ -1,6 +1,11 @@
 ## 🚀 Getting Started
 This project uses the OpenAI API and requires a valid API key to run locally.
 
+## 🚨 Alert
+The backend is hosted on Render using a free plan, which may cause the server to enter sleep mode after periods of inactivity.
+
+As a result, the first request may take a few extra seconds to respond. This is expected behavior, and performance will return to normal afterward.
+
 ## Prerequisites
 Ensure you have the following installed on your machine:
 
