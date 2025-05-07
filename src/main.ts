@@ -20,7 +20,7 @@ async function bootstrap() {
 
   // Configurar CORS
   app.enableCors({
-    origin: ['https://invoice-case.vercel.app, localhost:3000'],
+    origin: ['https://invoice-case.vercel.app, http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
