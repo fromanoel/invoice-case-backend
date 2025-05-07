@@ -20,7 +20,7 @@ async function bootstrap() {
 
   // Configurar CORS
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000, https://invoice-case-backend.onrender.com/'],
     methods: ['GET', 'POST'],
     credentials: true,
   });
